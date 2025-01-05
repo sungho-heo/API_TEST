@@ -13,7 +13,9 @@ function App() {
       });
   };
   // 사용 예시
-  const apiUrl = "https://apihub.kma.go.kr/api/json?authKey=YOUR_AUTH_KEY";
+  const apiUrl = `https://apihub.kma.go.kr/api/json?authKey=${
+    import.meta.env.VITE_API_KEY
+  }`;
   callJsonApi(apiUrl);
   return (
     <>
