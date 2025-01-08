@@ -13,9 +13,9 @@ function App() {
       });
   };
   // 사용 예시
-  const apiUrl = `//apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${
+  const apiUrl = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidFcst?serviceKey=${
     import.meta.env.VITE_API_KEY
-  }&pageNo=1&numOfRows=1000&dataType=JSON&base_date=20250104&base_time=0500&nx=55&ny=127
+  }&pageNo=1&numOfRows=10&dataType=JSON&stnId=108&tmFc=202501080600
 `;
   callJsonApi(apiUrl);
   return (
