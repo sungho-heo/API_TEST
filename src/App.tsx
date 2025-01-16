@@ -1,23 +1,46 @@
 function App() {
-  const callJsonApi = (url: string) => {
-    // Text API 호출 함수
-    fetch(url) // fetch를 통해 API 호출
-      .then((response) => response.json()) // 응답을 JSON으로 변환
-      .then((data) => {
-        console.log(data); // 데이터 출력
-        // saveFilePath를 사용하여 데이터를 저장하거나 추가적인 처리를 수행할 수 있습니다.
-      })
-      .catch((error) => {
-        console.error("API 호출 중 오류가 발생했습니다:", error);
-        // 오류 처리를 수행할 수 있습니다.
-      });
+  const getLatestTmFc = (): string => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    const hour = now.getHours() < 6 ? "1800" : "0600"; // 6시 이전이면 전날 18시 데이터 요청
+
+    return `${year}${month}${day}${hour}`;
   };
-  // 사용 예시
-  const apiUrl = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidFcst?serviceKey=${
-    import.meta.env.VITE_API_KEY
-  }&pageNo=1&numOfRows=10&dataType=JSON&stnId=108&tmFc=202501080600
-`;
-  callJsonApi(apiUrl);
+
+  const getMidFcstData = async (stnId: number) => {
+    const API_URL =
+      "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidFcst";
+    const SERVICE_KEY = import.meta.env.VITE_API_KEY;
+    const tmFc = getLatestTmFc(); // 6시 또는 18시 발표 시간 계산
+
+    const params = new URLSearchParams({
+      pageNo: "3",
+      numOfRows: "100",
+      dataType: "JSON",
+      stnId: stnId.toString(), // 요청할 지역 코드
+      tmFc: tmFc,
+    });
+
+    const url = `${API_URL}?serviceKey=${SERVICE_KEY}&${params.toString()}`;
+    console.log("🔗 API 요청 URL:", url); // 디버깅용
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log(
+        `📌 중기예보 (${stnId} 지역) 데이터:`,
+        data.response.body.items.item
+      );
+    } catch (error) {
+      console.error("중기예보 데이터 호출 오류:", error);
+    }
+  };
+  getMidFcstData(108);
   return (
     <>
       <h1>Home</h1>
