@@ -5,9 +5,22 @@ function App() {
   const API_URL_VILAGE =
     "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
   const API_URL_MID =
-    "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidFcst";
+    "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst";
 
   const SERVICE_KEY = import.meta.env.VITE_API_KEY;
+
+  // 📌 현재 날짜 기준 발표 시간 설정 (06:00 또는 18:00)
+  const getTmFc = (): string => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    // 만약 현재 시간이 06시 이전이라면, 전날 18:00 발표 데이터 사용
+    const hour = now.getHours() < 6 ? "1800" : "0600";
+
+    return `${year}${month}${day}${hour}`;
+  };
 
   // 단기에보 오늘 ~ 3일 후까지
   const getShortTermData = async (nx: number, ny: number) => {
@@ -43,54 +56,49 @@ function App() {
   };
 
   // 중기예보 (3~5일)
-  const getMidForeCast = async (stnId: number) => {
-    const now = new Date();
-    let midData: any[] = [];
+  const getMidForeCast = async (regId: string) => {
+    const tmFc = getTmFc();
+    const params = new URLSearchParams({
+      pageNo: "1",
+      numOfRows: "10",
+      dataType: "JSON",
+      regId: regId.toString(),
+      tmFc: tmFc,
+    });
 
-    for (let i = 1; i < 4; i++) {
-      const targetDate = new Date();
-      targetDate.setDate(now.getDate() + i);
+    const url = `${API_URL_MID}?serviceKey=${SERVICE_KEY}&${params.toString()}`;
+    try {
+      const response = await fetch(url);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      const items = data.response.body.items.item || [];
 
-      const year = targetDate.getFullYear();
-      const month = String(targetDate.getMonth() + 1).padStart(2, "0");
-      const day = String(targetDate.getDate()).padStart(2, "0");
+      if (items.length === 0) {
+        console.log("중기예보 데이터가 없습니다.");
+        return [];
+      }
 
-      const tmFc1 = `${year}${month}${day}0600`; //06시 경 데이터
-      const tmFc2 = `${year}${month}${day}1800`; //18시 경 데이터
-
-      const fetchMidData = async (tmFc: string) => {
-        const params = new URLSearchParams({
-          pageNo: "1",
-          numofRows: "100",
-          dataType: "JSON",
-          stnId: stnId.toString(),
-          tmFc: tmFc,
-        });
-
-        const url = `${API_URL_MID}?serviceKey=${SERVICE_KEY}&${params.toString()}`;
-
-        try {
-          const response = await fetch(url);
-          if (!response.ok)
-            throw new Error(`HTTP error! status: ${response.status}`);
-          const data = await response.json();
-          console.log(data);
-          return data.response.body.items.item || [];
-        } catch (error) {
-          console.error("중기예보 데이터 호출 오류:", error);
-          return [];
-        }
-      };
-      const data1 = await fetchMidData(tmFc1);
-      const data2 = await fetchMidData(tmFc2);
-      midData = midData.concat(data1, data2);
+      return items.map((item: any) => ({
+        date: tmFc,
+        region: item.regId,
+        day4: { am: item.wf5Am, pm: item.wf5Pm },
+        day5: { am: item.wf6Am, pm: item.wf6Pm },
+        day6: { am: item.wf7Am, pm: item.wf7Pm },
+        day7: item.wf8,
+        day8: item.wf9,
+        day9: item.wf10,
+      }));
+    } catch (error) {
+      console.error("중기예보 데이터 호출 오류", error);
+      return [];
     }
-    return midData;
   };
+
   useEffect(() => {
     const fetchWeatherData = async () => {
       const shortTermData = await getShortTermData(55, 157);
-      const midTermData = await getMidForeCast(108);
+      const midTermData = await getMidForeCast("11B00000");
 
       // 단기 & 중기 데이터 병합
       const resultData = [...shortTermData, ...midTermData];
