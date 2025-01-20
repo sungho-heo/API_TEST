@@ -41,20 +41,69 @@ function App() {
       return [];
     }
   };
-  const getLatestTmFc = (): string => {
+
+  // 중기예보 (3~5일)
+  const getMidForeCast = async (stnId: number) => {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
+    let midData: any[] = [];
 
-    const hour = now.getHours() < 6 ? "1800" : "0600"; // 6시 이전이면 전날 18시 데이터 요청
+    for (let i = 1; i < 4; i++) {
+      const targetDate = new Date();
+      targetDate.setDate(now.getDate() + i);
 
-    return `${year}${month}${day}${hour}`;
+      const year = targetDate.getFullYear();
+      const month = String(targetDate.getMonth() + 1).padStart(2, "0");
+      const day = String(targetDate.getDate()).padStart(2, "0");
+
+      const tmFc1 = `${year}${month}${day}0600`; //06시 경 데이터
+      const tmFc2 = `${year}${month}${day}1800`; //18시 경 데이터
+
+      const fetchMidData = async (tmFc: string) => {
+        const params = new URLSearchParams({
+          pageNo: "1",
+          numofRows: "100",
+          dataType: "JSON",
+          stnId: stnId.toString(),
+          tmFc: tmFc,
+        });
+
+        const url = `${API_URL_MID}?serviceKey=${SERVICE_KEY}&${params.toString()}`;
+
+        try {
+          const response = await fetch(url);
+          if (!response.ok)
+            throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          console.log(data);
+          return data.response.body.items.item || [];
+        } catch (error) {
+          console.error("중기예보 데이터 호출 오류:", error);
+          return [];
+        }
+      };
+      const data1 = await fetchMidData(tmFc1);
+      const data2 = await fetchMidData(tmFc2);
+      midData = midData.concat(data1, data2);
+    }
+    return midData;
   };
-  console.log(getShortTermData(55, 127));
+  useEffect(() => {
+    const fetchWeatherData = async () => {
+      const shortTermData = await getShortTermData(55, 157);
+      const midTermData = await getMidForeCast(108);
+
+      // 단기 & 중기 데이터 병합
+      const resultData = [...shortTermData, ...midTermData];
+
+      console.log("최종 데이터 확인:", resultData);
+      setCastData(resultData);
+    };
+    fetchWeatherData();
+  }, []);
   return (
     <>
       <h1>Home</h1>
+      <pre>{JSON.stringify(foreCastData, null, 2)}</pre>
     </>
   );
 }
