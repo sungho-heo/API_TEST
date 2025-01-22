@@ -33,7 +33,7 @@ function App() {
 
     const params = new URLSearchParams({
       pageNo: "1",
-      numOfRows: "10",
+      numOfRows: "1000",
       dataType: "JSON",
       base_date: baseDate,
       base_time: baseTime,
@@ -48,6 +48,19 @@ function App() {
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
+      const tmpData1 = data.response.body.items.item;
+
+      // 📌 "TMP" 값만 필터링
+      const filteredData = tmpData1
+        .filter((item: any) => item.category === "TMP") // TMP만 필터링
+        .map((item: any) => ({
+          Date: item.fcstDate,
+          time: item.fcstTime,
+          tmp: item.category, // "TMP"로 고정된 값
+          value: item.fcstValue, // 온도 값
+        }));
+
+      return filteredData;
       return data.response.body.items.item || [];
     } catch (error) {
       console.error("단기예보 데이터 호출 오류:", error);
@@ -103,7 +116,6 @@ function App() {
       // 단기 & 중기 데이터 병합
       const resultData = [...shortTermData, ...midTermData];
 
-      console.log("최종 데이터 확인:", resultData);
       setCastData(resultData);
     };
     fetchWeatherData();
