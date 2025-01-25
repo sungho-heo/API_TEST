@@ -121,6 +121,7 @@ function App() {
     };
     fetchWeatherData();
   }, []);
+  getRegionName();
   return (
     <>
       <h1>Home</h1>
