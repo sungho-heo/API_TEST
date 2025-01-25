@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getRegionName } from "./api";
 function App() {
   const [foreCastData, setCastData] = useState<any[]>([]);
 
