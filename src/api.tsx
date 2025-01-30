@@ -62,11 +62,9 @@ export const getRegionName = async () => {
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
     );
     const address = response.data.address;
-    console.log("사용자 지역 정보:", address);
 
     // 위경도 → 기상청 격자 좌표 변환
     const gridCoords = TO_GRID(lat, lon);
-    console.log("변환된 격자 좌표:", gridCoords);
 
     return { address, gridCoords };
   } catch (error) {

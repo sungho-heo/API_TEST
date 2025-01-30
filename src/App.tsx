@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getRegionName } from "./api";
 function App() {
   const [foreCastData, setCastData] = useState<any[]>([]);
+  const [regionName, setRegionName] = useState<string>(""); // 📌 지역명 상태 추가
 
   const API_URL_VILAGE =
     "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
@@ -62,7 +63,6 @@ function App() {
         }));
 
       return filteredData;
-      return data.response.body.items.item || [];
     } catch (error) {
       console.error("단기예보 데이터 호출 오류:", error);
       return [];
@@ -114,6 +114,11 @@ function App() {
       const shortTermData = await getShortTermData(55, 157);
       const midTermData = await getMidForeCast("11B00000");
 
+      const regionData = await getRegionName();
+      if (regionData) {
+        setRegionName(regionData.state || regionData.city || "알 수 없음");
+      }
+
       // 단기 & 중기 데이터 병합
       const resultData = [...shortTermData, ...midTermData];
 
@@ -121,7 +126,6 @@ function App() {
     };
     fetchWeatherData();
   }, []);
-  getRegionName();
   return (
     <>
       <h1>Home</h1>
