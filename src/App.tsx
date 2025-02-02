@@ -116,19 +116,23 @@ function App() {
 
       const regionData = await getRegionName();
       if (regionData) {
-        setRegionName(regionData.state || regionData.city || "알 수 없음");
+        setRegionName(
+          regionData.address.city || regionData.address.town || "알 수 없음"
+        ); // 지역명 설정
+        const { nx, ny } = regionData.gridCoords;
+
+        const shortTermData = await getShortTermData(nx, ny);
+        const midTermData = await getMidForeCast("11B00000");
+        setCastData([...shortTermData, ...midTermData]);
       }
 
-      // 단기 & 중기 데이터 병합
-      const resultData = [...shortTermData, ...midTermData];
-
-      setCastData(resultData);
+      setCastData([...shortTermData, ...midTermData]);
     };
     fetchWeatherData();
   }, []);
   return (
     <>
-      <h1>Home</h1>
+      <h1>{regionName}</h1>
       <pre>{JSON.stringify(foreCastData, null, 2)}</pre>
     </>
   );
