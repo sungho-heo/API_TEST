@@ -117,7 +117,9 @@ function App() {
       const regionData = await getRegionName();
       if (regionData) {
         setRegionName(
-          regionData.address.city || regionData.address.town || "알 수 없음"
+          [regionData.address.province, regionData.address.city]
+            .filter(Boolean)
+            .join(" ")
         ); // 지역명 설정
         const { nx, ny } = regionData.gridCoords;
 
