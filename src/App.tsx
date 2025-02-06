@@ -111,9 +111,6 @@ function App() {
 
   useEffect(() => {
     const fetchWeatherData = async () => {
-      const shortTermData = await getShortTermData(55, 157);
-      const midTermData = await getMidForeCast("11B00000");
-
       const regionData = await getRegionName();
       if (regionData) {
         setRegionName(
