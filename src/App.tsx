@@ -124,8 +124,6 @@ function App() {
         const midTermData = await getMidForeCast("11B00000");
         setCastData([...shortTermData, ...midTermData]);
       }
-
-      setCastData([...shortTermData, ...midTermData]);
     };
     fetchWeatherData();
   }, []);
