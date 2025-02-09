@@ -6,23 +6,8 @@ function App() {
 
   const API_URL_VILAGE =
     "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst";
-  const API_URL_MID =
-    "https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst";
 
   const SERVICE_KEY = import.meta.env.VITE_API_KEY;
-
-  // 📌 현재 날짜 기준 발표 시간 설정 (06:00 또는 18:00)
-  const getTmFc = (): string => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-
-    // 만약 현재 시간이 06시 이전이라면, 전날 18:00 발표 데이터 사용
-    const hour = now.getHours() < 6 ? "1800" : "0600";
-
-    return `${year}${month}${day}${hour}`;
-  };
 
   // 단기에보 오늘 ~ 3일 후까지
   const getShortTermData = async (nx: number, ny: number) => {
@@ -69,60 +54,15 @@ function App() {
     }
   };
 
-  // 중기예보 (3~5일)
-  const getMidForeCast = async (regId: string) => {
-    const tmFc = getTmFc();
-    const params = new URLSearchParams({
-      pageNo: "1",
-      numOfRows: "10",
-      dataType: "JSON",
-      regId: regId.toString(),
-      tmFc: tmFc,
-    });
-
-    const url = `${API_URL_MID}?serviceKey=${SERVICE_KEY}&${params.toString()}`;
-    try {
-      const response = await fetch(url);
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      const items = data.response.body.items.item || [];
-
-      if (items.length === 0) {
-        console.log("중기예보 데이터가 없습니다.");
-        return [];
-      }
-
-      return items.map((item: any) => ({
-        date: tmFc,
-        region: item.regId,
-        day4: { am: item.wf5Am, pm: item.wf5Pm },
-        day5: { am: item.wf6Am, pm: item.wf6Pm },
-        day6: { am: item.wf7Am, pm: item.wf7Pm },
-        day7: item.wf8,
-        day8: item.wf9,
-        day9: item.wf10,
-      }));
-    } catch (error) {
-      console.error("중기예보 데이터 호출 오류", error);
-      return [];
-    }
-  };
-
   useEffect(() => {
     const fetchWeatherData = async () => {
       const regionData = await getRegionName();
       if (regionData) {
-        setRegionName(
-          [regionData.address.province, regionData.address.city]
-            .filter(Boolean)
-            .join(" ")
-        ); // 지역명 설정
+        setRegionName([regionData.city].filter(Boolean).join(" ")); // 지역명 설정
         const { nx, ny } = regionData.gridCoords;
 
         const shortTermData = await getShortTermData(nx, ny);
-        const midTermData = await getMidForeCast("11B00000");
-        setCastData([...shortTermData, ...midTermData]);
+        setCastData([...shortTermData]);
       }
     };
     fetchWeatherData();

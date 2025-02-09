@@ -61,12 +61,18 @@ export const getRegionName = async () => {
     const response = await axios.get(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
     );
-    const address = response.data.address;
+    if (!response.data.address) throw new Error("주소 데이터가 없습니다.");
+
+    const city =
+      response.data.address.city ||
+      response.data.address.town ||
+      response.data.address.village ||
+      "";
 
     // 위경도 → 기상청 격자 좌표 변환
     const gridCoords = TO_GRID(lat, lon);
 
-    return { address, gridCoords };
+    return { city, gridCoords };
   } catch (error) {
     console.error("위치 정보 가져오기 실패:", error);
     return null;
