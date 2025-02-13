@@ -39,12 +39,12 @@ function App() {
 
       // 📌 "TMP" 값만 필터링
       const filteredData = tmpData1
-        .filter((item: any) => item.category === "TMP") // TMP만 필터링
+        .filter((item: any) => ["TMP", "TMX", "TMN"].includes(item.category)) // 3개 카테고리 필터링
         .map((item: any) => ({
-          Date: item.fcstDate,
+          date: item.fcstDate,
           time: item.fcstTime,
-          tmp: item.category, // "TMP"로 고정된 값
-          value: item.fcstValue, // 온도 값
+          category: item.category, // TMP, TMX, TMN
+          value: item.fcstValue, // 값
         }));
 
       return filteredData;
