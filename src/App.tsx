@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { getRegionName } from "./api";
+
+type ForecastItem = {
+  fcstDate: string; // 예측 날짜 (YYYYMMDD)
+  fcstTime: string; // 예측 시간 (HHMM)
+  category: "TMP" | "TMX" | "TMN"; // 가능한 카테고리 값만 지정
+  fcstValue: string; // 기온 값 (API에서는 string으로 제공될 가능성 높음)
+};
+
 function App() {
-  const [foreCastData, setCastData] = useState<any[]>([]);
+  const [tmpData, setTmpData] = useState<any[]>([]); // TMP 데이터 상태
+  const [tmxTmnData, setTmxTmnData] = useState<any[]>([]); // TMX, TMN 데이터 상태
   const [regionName, setRegionName] = useState<string>(""); // 📌 지역명 상태 추가
 
   const API_URL_VILAGE =
@@ -35,22 +44,30 @@ function App() {
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      const tmpData1 = data.response.body.items.item;
+      const tmpData1: ForecastItem[] = data.response.body.items.item;
 
-      // 📌 "TMP" 값만 필터링
-      const filteredData = tmpData1
-        .filter((item: any) => ["TMP", "TMX", "TMN"].includes(item.category)) // 3개 카테고리 필터링
-        .map((item: any) => ({
+      // TMP 데이터 필터링
+      const tmpData = tmpData1
+        .filter((item) => item.category === "TMP")
+        .map((item) => ({
           date: item.fcstDate,
           time: item.fcstTime,
-          category: item.category, // TMP, TMX, TMN
-          value: item.fcstValue, // 값
+          value: item.fcstValue,
         }));
 
-      return filteredData;
+      // TMX, TMN 데이터 필터링
+      const tmxTmnData = tmpData1
+        .filter((item) => ["TMX", "TMN"].includes(item.category))
+        .map((item) => ({
+          date: item.fcstDate,
+          category: item.category,
+          value: item.fcstValue,
+        }));
+
+      return { tmpData, tmxTmnData };
     } catch (error) {
       console.error("단기예보 데이터 호출 오류:", error);
-      return [];
+      return { tmpData: [], tmxTmnData: [] };
     }
   };
 
@@ -61,16 +78,21 @@ function App() {
         setRegionName([regionData.city].filter(Boolean).join(" ")); // 지역명 설정
         const { nx, ny } = regionData.gridCoords;
 
-        const shortTermData = await getShortTermData(nx, ny);
-        setCastData([...shortTermData]);
+        const { tmpData, tmxTmnData } = await getShortTermData(nx, ny);
+        setTmpData(tmpData);
+        setTmxTmnData(tmxTmnData);
       }
     };
     fetchWeatherData();
   }, []);
+
   return (
     <>
       <h1>{regionName}</h1>
-      <pre>{JSON.stringify(foreCastData, null, 2)}</pre>
+      <h2>TMP 데이터</h2>
+      <pre>{JSON.stringify(tmpData, null, 2)}</pre>
+      <h2>TMX, TMN 데이터</h2>
+      <pre>{JSON.stringify(tmxTmnData, null, 2)}</pre>
     </>
   );
 }
