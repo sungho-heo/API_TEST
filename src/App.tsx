@@ -86,13 +86,31 @@ function App() {
     fetchWeatherData();
   }, []);
 
+  console.log(tmpData);
+
   return (
     <>
       <h1>{regionName}</h1>
       <h2>TMP 데이터</h2>
-      <pre>{JSON.stringify(tmpData, null, 2)}</pre>
+      <ul>
+        {tmpData.map((item, index) => (
+          <li key={index}>
+            날짜: {item.date}, 시간:{" "}
+            {`${item.time.slice(0, 2)}:${item.time.slice(2, 4)}`}, 온도:{" "}
+            {item.value}
+            °C
+          </li>
+        ))}
+      </ul>
+      {/* <pre>{JSON.stringify(tmpData, null, 2)}</pre> */}
       <h2>TMX, TMN 데이터</h2>
-      <pre>{JSON.stringify(tmxTmnData, null, 2)}</pre>
+      <ul>
+        {tmxTmnData.map((item, index) => (
+          <li key={index}>
+            날짜: {item.date}, 타입: {item.category}, 값: {item.value}°C
+          </li>
+        ))}
+      </ul>
     </>
   );
 }
