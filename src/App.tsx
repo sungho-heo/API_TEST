@@ -86,8 +86,6 @@ function App() {
     fetchWeatherData();
   }, []);
 
-  console.log(tmpData);
-
   return (
     <>
       <h1>{regionName}</h1>
@@ -107,7 +105,9 @@ function App() {
       <ul>
         {tmxTmnData.map((item, index) => (
           <li key={index}>
-            날짜: {item.date}, 타입: {item.category}, 값: {item.value}°C
+            날짜: {item.date}, 타입:{" "}
+            {item.category === "TMN" ? "최저기온" : "최고기온"}, 값:{" "}
+            {item.value}°C
           </li>
         ))}
       </ul>
