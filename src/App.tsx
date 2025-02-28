@@ -89,27 +89,57 @@ function App() {
   return (
     <>
       <h1>{regionName}</h1>
-      <h2>TMP 데이터</h2>
+
+      <h2>날짜별 기온 데이터</h2>
       <ul>
-        {tmpData.map((item, index) => (
-          <li key={index}>
-            날짜: {item.date}, 시간:{" "}
-            {`${item.time.slice(0, 2)}:${item.time.slice(2, 4)}`}, 온도:{" "}
-            {item.value}
-            °C
-          </li>
-        ))}
-      </ul>
-      {/* <pre>{JSON.stringify(tmpData, null, 2)}</pre> */}
-      <h2>TMX, TMN 데이터</h2>
-      <ul>
-        {tmxTmnData.map((item, index) => (
-          <li key={index}>
-            날짜: {item.date}, 타입:{" "}
-            {item.category === "TMN" ? "최저기온" : "최고기온"}, 값:{" "}
-            {item.value}°C
-          </li>
-        ))}
+        {tmpData
+          .reduce((acc: any[], item) => {
+            // 현재 날짜의 TMX, TMN 데이터 찾기
+            const tmxItem = tmxTmnData.find(
+              (t) => t.date === item.date && t.category === "TMX"
+            );
+            const tmnItem = tmxTmnData.find(
+              (t) => t.date === item.date && t.category === "TMN"
+            );
+
+            // 같은 날짜의 데이터가 있으면 같은 <li>에 넣음
+            const existingIndex = acc.findIndex(
+              (group) => group.date === item.date
+            );
+            if (existingIndex !== -1) {
+              acc[existingIndex].temps.push({
+                time: `${item.time.slice(0, 2)}:${item.time.slice(2, 4)}`,
+                value: item.value,
+              });
+            } else {
+              acc.push({
+                date: item.date,
+                temps: [
+                  {
+                    time: `${item.time.slice(0, 2)}:${item.time.slice(2, 4)}`,
+                    value: item.value,
+                  },
+                ],
+                tmx: tmxItem ? tmxItem.value : null,
+                tmn: tmnItem ? tmnItem.value : null,
+              });
+            }
+            return acc;
+          }, [])
+          .map((group, index) => (
+            <li key={index}>
+              날짜: {group.date}
+              <ul>
+                {group.temps.map((temp, idx) => (
+                  <li key={idx}>
+                    시간: {temp.time}, 온도: {temp.value}°C
+                  </li>
+                ))}
+              </ul>
+              최고기온: {group.tmx ? `${group.tmx}°C` : "데이터 없음"} /
+              최저기온: {group.tmn ? `${group.tmn}°C` : "데이터 없음"}
+            </li>
+          ))}
       </ul>
     </>
   );
