@@ -4,3 +4,4 @@
 
 1. tmp and tmx tmn add
 2. tmp data and tmx and tmn 데이터분류
+3. tmp data and tmx,tmn combine

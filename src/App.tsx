@@ -25,7 +25,7 @@ function App() {
       2,
       "0"
     )}${String(now.getDate()).padStart(2, "0")}`;
-    const baseTime = "0500"; // 05:00 발표 데이터 기준
+    const baseTime = "0500";
 
     const params = new URLSearchParams({
       pageNo: "1",
